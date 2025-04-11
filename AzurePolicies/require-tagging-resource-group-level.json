@@ -1,0 +1,50 @@
+{
+    "mode": "All",
+    "policyRule": {
+        "if": {
+            "allOf": [
+                {
+                    "field": "type",
+                    "equals": "Microsoft.Resources/resourceGroups"
+                },
+                {
+                    "field": "tags['Environment']",
+                    "notIn": ["Dev", "Prod"]
+                },
+                {
+                    "field": "tags['Application']",
+                    "notExists": true
+                },
+                {
+                    "allOf": [
+                        {
+                            "field": "tags['Alias']",
+                            "exists": true
+                        },
+                        {
+                            "field": "tags['Alias']",
+                            "match": "^[A-Z0-9]+$"
+                        }
+                    ]
+                },
+                {
+                    "field": "tags['Owner']",
+                    "notExists": true
+                },
+                {
+                    "field": "tags['Department']",
+                    "notExists": true
+                }
+            ]
+        },
+        "then": {
+            "effect": "Deny"
+        }
+    },
+    "parameters": {},
+    "displayName": "Enforce Required Tags on Resource Groups",
+    "description": "This policy ensures that specific tags are applied to resource groups with required formats and values.",
+    "metadata": {
+        "category": "Tags"
+    }
+}

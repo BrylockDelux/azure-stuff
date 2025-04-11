@@ -1,0 +1,97 @@
+{
+    "properties": {
+        "displayName": "Enforce Auto-Shutdown Schedule",
+        "policyType": "Custom",
+        "mode": "All",
+        "description": "This policy ensures that all applicable resources are automatically shut down at night based on their region's timezone. Resources will remain off until manually started.",
+        "metadata": {
+            "version": "1.0.0",
+            "category": "Cost Management"
+        },
+        "parameters": {
+            "shutdownTime": {
+                "type": "String",
+                "metadata": {
+                    "displayName": "Shutdown Time (Local Time)",
+                    "description": "The local time when resources should be shut down (in 24-hour format, e.g., 22:00)"
+                },
+                "defaultValue": "23:30"
+            }
+        },
+        "policyRule": {
+            "if": {
+                "allOf": [
+                    {
+                        "field": "type",
+                        "in": [
+                            "Microsoft.Compute/virtualMachines",
+                            "Microsoft.Compute/virtualMachineScaleSets",
+                            "Microsoft.ContainerService/managedClusters",
+                            "Microsoft.Databricks/workspaces"
+                        ]
+                    },
+                    {
+                        "field": "Microsoft.Compute/virtualMachines/autoShutdown",
+                        "exists": "false"
+                    }
+                ]
+            },
+            "then": {
+                "effect": "deployIfNotExists",
+                "details": {
+                    "type": "Microsoft.Compute/virtualMachines/autoShutdown",
+                    "existenceCondition": {
+                        "allOf": [
+                            {
+                                "field": "Microsoft.Compute/virtualMachines/autoShutdown/time",
+                                "equals": "[parameters('shutdownTime')]"
+                            }
+                        ]
+                    },
+                    "deployment": {
+                        "properties": {
+                            "mode": "incremental",
+                            "template": {
+                                "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                                "contentVersion": "1.0.0.0",
+                                "parameters": {},
+                                "variables": {
+                                    "timeZoneMap": {
+                                        "eastus": "Eastern Standard Time",
+                                        "eastus2": "Eastern Standard Time",
+                                        "westus": "Pacific Standard Time",
+                                        "northcentralus": "Central Standard Time",
+                                        "southcentralus": "Central Standard Time",
+                                        "northeurope": "W. Europe Standard Time",
+                                        "westeurope": "W. Europe Standard Time",
+                                        "uksouth": "GMT Standard Time",
+                                        "ukwest": "GMT Standard Time",
+                                        "centralindia": "India Standard Time"
+                                    }
+                                },
+                                "resources": [
+                                    {
+                                        "type": "Microsoft.Compute/virtualMachines/autoShutdown",
+                                        "apiVersion": "2019-04-01",
+                                        "name": "[concat(field('name'), '/default')]",
+                                        "location": "[field('location')]",
+                                        "properties": {
+                                            "time": "[parameters('shutdownTime')]",
+                                            "timeZoneId": "[variables('timeZoneMap')[field('location')]]",
+                                            "notificationSettings": {
+                                                "status": "Enabled",
+                                                "timeInMinutes": 30,
+                                                "emailRecipient": "[field('tags.ownerEmail')]",
+                                                "notificationLocale": "en"
+                                            }
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+} 

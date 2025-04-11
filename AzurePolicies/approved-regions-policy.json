@@ -1,0 +1,57 @@
+{
+    "properties": {
+        "displayName": "Allowed Locations",
+        "policyType": "Custom",
+        "mode": "All",
+        "description": "This policy enables you to restrict the locations your organization can specify when deploying resources. Use to enforce your geo-compliance requirements. Excludes resource groups, Microsoft.AzureActiveDirectory/b2cDirectories, and resources that use the 'global' region.",
+        "metadata": {
+            "version": "1.0.0",
+            "category": "General"
+        },
+        "parameters": {
+            "listOfAllowedLocations": {
+                "type": "Array",
+                "metadata": {
+                    "displayName": "Allowed locations",
+                    "description": "The list of locations that can be specified when deploying resources.",
+                    "strongType": "location"
+                },
+                "defaultValue": [
+                    "eastus",
+                    "eastus2",
+                    "westus",
+                    "westus2",
+                    "westus3",
+                    "northcentralus",
+                    "southcentralus",
+                    "northeurope",
+                    "westeurope",
+                    "uksouth",
+                    "ukwest",
+                    "centralindia"
+                ]
+            }
+        },
+        "policyRule": {
+            "if": {
+                "allOf": [
+                    {
+                        "field": "location",
+                        "notIn": "[parameters('listOfAllowedLocations')]"
+                    },
+                    {
+                        "field": "location",
+                        "notEquals": "global"
+                    },
+                    {
+                        "field": "type",
+                        "notEquals": "Microsoft.AzureActiveDirectory/b2cDirectories"
+                    }
+                ]
+            },
+            "then": {
+                "effect": "deny"
+            }
+        }
+    }
+} 
